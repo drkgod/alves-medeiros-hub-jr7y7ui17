@@ -1,24 +1,24 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useMemo, Fragment } from 'react'
+import { format } from 'date-fns'
+import { useGoogleDrive, DriveFile } from '@/hooks/use-google-drive'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
+  Search,
   FolderOpen,
-  ChevronRight,
-  FolderPlus,
-  ArrowLeft,
-  RefreshCw,
+  AlertCircle,
+  FileText,
+  Image as ImageIcon,
+  FileSpreadsheet,
+  File as FileIcon,
+  Folder,
   MoreVertical,
   Pencil,
-  Settings,
+  FolderPlus,
+  RefreshCw,
+  ExternalLink,
 } from 'lucide-react'
-import {
-  listDriveFiles,
-  createDriveFolder,
-  createClientStructure,
-  renameDriveFile,
-  type DriveFile,
-} from '@/services/google_drive'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -34,21 +34,65 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useNavigate } from 'react-router-dom'
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from '@/components/ui/breadcrumb'
 
 type FolderStackItem = { id: string; name: string }
 
 export default function Drive() {
-  const navigate = useNavigate()
-  const [files, setFiles] = useState<DriveFile[]>([])
-  const [loading, setLoading] = useState(false)
+  const {
+    isChecking,
+    isConnected,
+    loading,
+    error,
+    files,
+    listFiles,
+    createFolder,
+    renameItem,
+    createClientStructure,
+    connectGoogle,
+  } = useGoogleDrive()
+
   const [folderStack, setFolderStack] = useState<FolderStackItem[]>([
     { id: 'root', name: 'Meu Drive' },
   ])
-  const [error, setError] = useState<string | null>(null)
+  const currentFolder = folderStack[folderStack.length - 1]
+
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 300)
+    return () => clearTimeout(timer)
+  }, [searchTerm])
+
+  useEffect(() => {
+    if (isConnected && !isChecking) {
+      listFiles(currentFolder.id)
+    }
+  }, [isConnected, isChecking, currentFolder.id, listFiles])
+
+  const filteredFiles = useMemo(() => {
+    const searchLower = debouncedSearch.toLowerCase()
+    return files
+      .filter((f) => f.name.toLowerCase().includes(searchLower))
+      .sort((a, b) => {
+        if (a.isFolder === b.isFolder) {
+          return a.name.localeCompare(b.name)
+        }
+        return a.isFolder ? -1 : 1
+      })
+  }, [files, debouncedSearch])
 
   const [newFolderOpen, setNewFolderOpen] = useState(false)
   const [newFolderName, setNewFolderName] = useState('')
+
   const [clientStructureOpen, setClientStructureOpen] = useState(false)
   const [clientName, setClientName] = useState('')
 
@@ -56,53 +100,24 @@ export default function Drive() {
   const [renameFileId, setRenameFileId] = useState('')
   const [renameName, setRenameName] = useState('')
 
-  const currentFolder = folderStack[folderStack.length - 1]
-
-  const fetchFiles = useCallback(async (folderId: string) => {
-    setLoading(true)
-    setError(null)
-    try {
-      const data = await listDriveFiles(folderId)
-      setFiles(data)
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar arquivos')
-      if (err.status === 401) {
-        toast.error('Conta do Google não conectada ou sessão expirada. Conecte nas Configurações.')
-      } else {
-        toast.error('Não foi possível carregar os arquivos do Drive.')
-      }
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    fetchFiles(currentFolder.id)
-  }, [currentFolder.id, fetchFiles])
-
   const handleFolderClick = (folder: DriveFile) => {
     if (folder.isFolder) {
       setFolderStack([...folderStack, { id: folder.id, name: folder.name }])
+      setSearchTerm('')
     } else if (folder.webViewLink) {
       window.open(folder.webViewLink, '_blank')
-    }
-  }
-
-  const handleBack = () => {
-    if (folderStack.length > 1) {
-      setFolderStack(folderStack.slice(0, -1))
     }
   }
 
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return
     try {
-      await createDriveFolder(newFolderName.trim(), currentFolder.id)
-      toast.success('Pasta criada com sucesso')
+      await createFolder(newFolderName.trim(), currentFolder.id)
+      toast.success('Pasta criada!')
       setNewFolderOpen(false)
       setNewFolderName('')
-      fetchFiles(currentFolder.id)
-    } catch (err: any) {
+      listFiles(currentFolder.id)
+    } catch (err) {
       toast.error('Erro ao criar pasta no Drive')
     }
   }
@@ -111,11 +126,11 @@ export default function Drive() {
     if (!clientName.trim()) return
     try {
       await createClientStructure(clientName.trim(), currentFolder.id)
-      toast.success('Estrutura de pastas do cliente criada')
+      toast.success('Estrutura criada com 4 pastas!')
       setClientStructureOpen(false)
       setClientName('')
-      fetchFiles(currentFolder.id)
-    } catch (err: any) {
+      listFiles(currentFolder.id)
+    } catch (err) {
       toast.error('Erro ao criar estrutura de pastas')
     }
   }
@@ -123,11 +138,11 @@ export default function Drive() {
   const handleRename = async () => {
     if (!renameName.trim() || !renameFileId) return
     try {
-      await renameDriveFile(renameFileId, renameName.trim())
-      toast.success('Renomeado com sucesso')
+      await renameItem(renameFileId, renameName.trim())
+      toast.success('Renomeado!')
       setRenameOpen(false)
-      fetchFiles(currentFolder.id)
-    } catch (err: any) {
+      listFiles(currentFolder.id)
+    } catch (err) {
       toast.error('Erro ao renomear arquivo/pasta')
     }
   }
@@ -138,84 +153,139 @@ export default function Drive() {
     setRenameOpen(true)
   }
 
-  const formatSize = (size?: string) => {
-    if (!size) return '--'
-    const bytes = parseInt(size, 10)
+  const formatSize = (bytesStr?: string) => {
+    if (!bytesStr) return '--'
+    const bytes = parseInt(bytesStr, 10)
     if (isNaN(bytes)) return '--'
-    const mb = bytes / (1024 * 1024)
-    return mb < 1 ? '< 1 MB' : `${mb.toFixed(1)} MB`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`
+  }
+
+  const getFileIcon = (file: DriveFile) => {
+    if (file.isFolder) return <Folder className="h-5 w-5 text-blue-500 fill-blue-100/50 shrink-0" />
+    if (file.mimeType.includes('pdf')) return <FileText className="h-5 w-5 text-red-500 shrink-0" />
+    if (file.mimeType.includes('image'))
+      return <ImageIcon className="h-5 w-5 text-green-500 shrink-0" />
+    if (file.mimeType.includes('spreadsheet') || file.mimeType.includes('excel'))
+      return <FileSpreadsheet className="h-5 w-5 text-green-600 shrink-0" />
+    if (file.mimeType.includes('document') || file.mimeType.includes('word'))
+      return <FileText className="h-5 w-5 text-blue-600 shrink-0" />
+    return <FileIcon className="h-5 w-5 text-muted-foreground shrink-0" />
+  }
+
+  if (isChecking) {
+    return (
+      <div className="h-full flex items-center justify-center p-6">
+        <RefreshCw className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
+  if (!isConnected) {
+    return (
+      <div className="h-full flex flex-col p-6 animate-in fade-in duration-300">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold tracking-tight">Google Drive</h1>
+          <p className="text-muted-foreground mt-2">
+            Gerencie os arquivos dos seus clientes diretamente na nuvem.
+          </p>
+        </div>
+        <Card className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-muted/30">
+          <FolderOpen className="w-24 h-24 text-muted-foreground/30 mb-6" />
+          <h2 className="text-2xl font-semibold mb-2">Google Drive nao conectado</h2>
+          <p className="text-muted-foreground mb-6 max-w-md">
+            Conecte sua conta Google para visualizar e organizar suas pastas diretamente pelo Hub.
+          </p>
+          <Button onClick={connectGoogle} size="lg">
+            Conectar Google Drive
+          </Button>
+        </Card>
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6 h-full flex flex-col pb-6">
+    <div className="space-y-6 h-full flex flex-col pb-6 animate-in fade-in duration-300">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Google Drive</h1>
           <p className="text-muted-foreground mt-2">
-            Organize e acesse os documentos dos seus clientes diretamente na nuvem.
+            Organize e acesse os documentos dos seus clientes.
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" onClick={() => setClientStructureOpen(true)}>
             <FolderPlus className="w-4 h-4 mr-2" />
-            Estrutura Cliente
+            Estrutura de Cliente
           </Button>
           <Button onClick={() => setNewFolderOpen(true)}>Nova Pasta</Button>
         </div>
       </div>
 
-      <Card className="flex-1 flex flex-col min-h-[500px]">
-        <CardHeader className="py-3 px-4 border-b bg-muted/20 flex flex-row items-center justify-between space-y-0">
-          <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap scrollbar-hide">
-            {folderStack.length > 1 && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 mr-2 shrink-0"
-                onClick={handleBack}
-              >
-                <ArrowLeft className="h-4 w-4" />
-              </Button>
-            )}
-            <div className="flex items-center text-sm font-medium">
-              {folderStack.map((f, i) => (
-                <div key={f.id} className="flex items-center">
-                  {i > 0 && (
-                    <ChevronRight className="w-4 h-4 mx-1 text-muted-foreground shrink-0" />
-                  )}
-                  <span
-                    className={`cursor-pointer hover:underline ${i === folderStack.length - 1 ? 'text-foreground' : 'text-muted-foreground'}`}
-                    onClick={() => setFolderStack(folderStack.slice(0, i + 1))}
-                  >
-                    {f.name}
-                  </span>
-                </div>
-              ))}
-            </div>
+      <Card className="flex-1 flex flex-col min-h-[500px] overflow-hidden">
+        <CardHeader className="py-3 px-4 border-b bg-muted/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center flex-1 min-w-0">
+            <Breadcrumb>
+              <BreadcrumbList>
+                {folderStack.map((f, i) => {
+                  const isLast = i === folderStack.length - 1
+                  return (
+                    <Fragment key={f.id}>
+                      <BreadcrumbItem>
+                        {isLast ? (
+                          <BreadcrumbPage>{f.name}</BreadcrumbPage>
+                        ) : (
+                          <BreadcrumbLink asChild>
+                            <button
+                              className="cursor-pointer"
+                              onClick={() => setFolderStack(folderStack.slice(0, i + 1))}
+                            >
+                              {f.name}
+                            </button>
+                          </BreadcrumbLink>
+                        )}
+                      </BreadcrumbItem>
+                      {!isLast && <BreadcrumbSeparator />}
+                    </Fragment>
+                  )
+                })}
+              </BreadcrumbList>
+            </Breadcrumb>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 shrink-0"
-            onClick={() => fetchFiles(currentFolder.id)}
-          >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
+
+          <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar nesta pasta..."
+                className="pl-9 h-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-9 w-9 shrink-0"
+              onClick={() => listFiles(currentFolder.id)}
+              disabled={loading}
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            </Button>
+          </div>
         </CardHeader>
-        <CardContent className="p-0 flex-1 overflow-auto">
+
+        <CardContent className="p-0 flex-1 overflow-auto bg-background">
           {error ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center h-full">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 mb-6">
-                <FolderOpen className="h-8 w-8 text-red-600" />
-              </div>
-              <h3 className="text-xl font-medium text-foreground mb-3">Conexão Necessária</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Para visualizar seus arquivos, você precisa conectar sua conta do Google Drive nas
-                configurações do sistema.
-              </p>
-              <Button onClick={() => navigate('/configuracoes')}>
-                <Settings className="w-4 h-4 mr-2" />
-                Ir para Configurações
+            <div className="flex flex-col items-center justify-center h-full p-8 text-center animate-in fade-in duration-300">
+              <AlertCircle className="w-16 h-16 text-destructive/50 mb-4" />
+              <h3 className="text-xl font-medium text-foreground mb-2">
+                Nao foi possivel carregar os arquivos.
+              </h3>
+              <p className="text-muted-foreground mb-6">{error}</p>
+              <Button onClick={() => listFiles(currentFolder.id)} variant="outline">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Tentar Novamente
               </Button>
             </div>
           ) : loading ? (
@@ -226,22 +296,33 @@ export default function Drive() {
                   className="flex items-center gap-4 py-2 border-b border-muted/30 last:border-0"
                 >
                   <Skeleton className="h-8 w-8 rounded" />
-                  <Skeleton className="h-5 w-64" />
-                  <Skeleton className="h-5 w-24 ml-auto" />
+                  <Skeleton className="h-5 w-1/3" />
+                  <div className="ml-auto flex gap-4">
+                    <Skeleton className="h-5 w-24 hidden sm:block" />
+                    <Skeleton className="h-5 w-16 hidden sm:block" />
+                    <Skeleton className="h-8 w-8 rounded" />
+                  </div>
                 </div>
               ))}
             </div>
-          ) : files.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
+          ) : filteredFiles.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center p-12 text-center text-muted-foreground animate-in fade-in duration-300">
               <FolderOpen className="h-16 w-16 mb-6 opacity-20" />
-              <p className="text-lg">Esta pasta está vazia.</p>
-              <p className="text-sm mt-2 opacity-70">
-                Arraste arquivos para o Google Drive para vê-los aqui.
-              </p>
+              {searchTerm ? (
+                <p className="text-lg">Nenhum arquivo encontrado para a busca.</p>
+              ) : (
+                <>
+                  <p className="text-lg font-medium text-foreground mb-1">Pasta vazia</p>
+                  <p className="text-sm mb-6">Esta pasta nao contem arquivos ou subpastas.</p>
+                  <Button onClick={() => setNewFolderOpen(true)} variant="outline">
+                    Nova Pasta
+                  </Button>
+                </>
+              )}
             </div>
           ) : (
-            <div className="divide-y">
-              {files.map((file) => (
+            <div className="divide-y animate-in fade-in duration-300">
+              {filteredFiles.map((file) => (
                 <div
                   key={file.id}
                   className="flex items-center gap-3 p-3 hover:bg-muted/50 transition-colors group"
@@ -250,25 +331,22 @@ export default function Drive() {
                     className="flex items-center gap-3 flex-1 cursor-pointer min-w-0"
                     onClick={() => handleFolderClick(file)}
                   >
-                    {file.isFolder ? (
-                      <FolderOpen className="h-6 w-6 text-blue-500 fill-blue-100/50 shrink-0" />
-                    ) : (
-                      <img
-                        src={file.iconLink}
-                        alt=""
-                        className="h-6 w-6 shrink-0"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none'
-                        }}
-                      />
-                    )}
+                    {getFileIcon(file)}
                     <span className="font-medium text-sm truncate text-foreground/90">
                       {file.name}
                     </span>
                   </div>
+
+                  {file.modifiedTime && (
+                    <div className="text-xs text-muted-foreground w-24 text-right hidden md:block shrink-0">
+                      {format(new Date(file.modifiedTime), 'dd/MM/yyyy')}
+                    </div>
+                  )}
+
                   <div className="text-xs text-muted-foreground w-20 text-right hidden sm:block shrink-0">
                     {formatSize(file.size)}
                   </div>
+
                   <div className="shrink-0 pl-2">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -287,6 +365,7 @@ export default function Drive() {
                         </DropdownMenuItem>
                         {file.webViewLink && (
                           <DropdownMenuItem onClick={() => window.open(file.webViewLink, '_blank')}>
+                            <ExternalLink className="h-4 w-4 mr-2" />
                             Abrir no Google Drive
                           </DropdownMenuItem>
                         )}
@@ -307,7 +386,7 @@ export default function Drive() {
           </DialogHeader>
           <div className="py-4">
             <Input
-              placeholder="Digite o nome da pasta"
+              placeholder="Nome da pasta"
               value={newFolderName}
               onChange={(e) => setNewFolderName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
@@ -349,22 +428,15 @@ export default function Drive() {
       <Dialog open={clientStructureOpen} onOpenChange={setClientStructureOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Gerar Estrutura de Cliente</DialogTitle>
+            <DialogTitle>Estrutura de Cliente</DialogTitle>
           </DialogHeader>
           <div className="py-4 space-y-4">
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Será criada uma pasta principal com o nome do cliente e as seguintes subpastas
-              organizacionais:
-              <br />
-              <span className="font-medium mt-2 block">
-                • 01-Procuracao
-                <br />• 02-Documentos
-                <br />• 03-Peticoes
-                <br />• 04-Comprovantes
-              </span>
+              Será criada uma pasta principal com o nome do cliente e subpastas para Procuração,
+              Documentos, Petições e Comprovantes.
             </p>
             <Input
-              placeholder="Nome completo do cliente"
+              placeholder="Nome do cliente"
               value={clientName}
               onChange={(e) => setClientName(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleCreateClientStructure()}
