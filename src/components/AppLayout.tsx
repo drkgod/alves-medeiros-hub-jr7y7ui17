@@ -14,6 +14,18 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from '@/components/ui/s
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from './ThemeToggle'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
+import { useNavigate } from 'react-router-dom'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import pb from '@/lib/pocketbase/client'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -27,7 +39,21 @@ const navigation = [
 
 export default function AppLayout() {
   const location = useLocation()
+  const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const { user, signOut } = useAuth()
+
+  const handleLogout = () => {
+    signOut()
+    navigate('/login')
+  }
+
+  const getInitials = (name?: string) => {
+    if (!name) return 'U'
+    const parts = name.trim().split(' ')
+    if (parts.length >= 2) return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+    return parts[0].substring(0, 2).toUpperCase()
+  }
 
   const NavItems = () => (
     <div className="flex flex-col gap-1 w-full mt-4">
@@ -87,6 +113,36 @@ export default function AppLayout() {
           </div>
           <div className="ml-auto flex items-center space-x-4">
             <ThemeToggle />
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage
+                        src={user.avatar ? pb.files.getUrl(user, user.avatar) : ''}
+                        alt={user.name || 'Avatar'}
+                      />
+                      <AvatarFallback>{getInitials(user.name || user.email)}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user.name || 'Usuário'}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer text-destructive focus:text-destructive"
+                  >
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         </div>
       </header>
