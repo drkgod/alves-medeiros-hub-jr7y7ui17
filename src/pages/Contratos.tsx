@@ -30,6 +30,7 @@ import {
 } from 'lucide-react'
 import { useContratos } from '@/hooks/use-contratos'
 import { format } from 'date-fns'
+import { SectionErrorBoundary } from '@/components/SectionErrorBoundary'
 
 function formatCPF(cpf: string) {
   const cleaned = cpf.replace(/\D/g, '')
@@ -100,9 +101,10 @@ export default function Contratos() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+      <SectionErrorBoundary>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total de Contratos</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -140,21 +142,25 @@ export default function Contratos() {
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-full sm:w-[200px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="todos">Todos</SelectItem>
-            <SelectItem value="pendente_processamento">Pendentes</SelectItem>
-            <SelectItem value="processado">Processados</SelectItem>
-            <SelectItem value="erro">Erros</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className="w-full sm:w-[200px]">
+          <label htmlFor="status-filter" className="sr-only">Filtrar por status</label>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger id="status-filter" className="w-full h-11">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todos">Todos</SelectItem>
+              <SelectItem value="pendente_processamento">Pendentes</SelectItem>
+              <SelectItem value="processado">Processados</SelectItem>
+              <SelectItem value="erro">Erros</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <Card>
-        <CardContent className="p-0 sm:p-6">
+      <SectionErrorBoundary>
+        <Card>
+          <CardContent className="p-0 sm:p-6">
           {error ? (
             <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
               <AlertCircle className="h-10 w-10 text-destructive" />
@@ -305,19 +311,20 @@ export default function Contratos() {
                   <span className="text-sm text-muted-foreground">
                     Página {page} de {totalPages}
                   </span>
-                  <Button
-                    variant="outline"
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    disabled={page === totalPages}
-                  >
-                    Próximo
-                  </Button>
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+                    <Button
+                      variant="outline"
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                    >
+                      Próximo
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </SectionErrorBoundary>
     </div>
   )
 }

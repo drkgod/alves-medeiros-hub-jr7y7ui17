@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { FileText, Search, ExternalLink } from 'lucide-react'
 import { RecordModel } from 'pocketbase'
+import { SectionErrorBoundary } from '@/components/SectionErrorBoundary'
 
 const statusColors: Record<string, string> = {
   rascunho: 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-800 dark:text-gray-300',
@@ -80,12 +81,17 @@ export default function Peticoes() {
     }
     if (data.items.length === 0) {
       return (
-        <div className="text-center py-12 text-muted-foreground animate-fade-in border rounded-md bg-card">
-          <FileText className="mx-auto h-12 w-12 opacity-50 mb-4" />
-          <p className="text-lg font-medium">Nenhuma petição gerada</p>
-          <p className="text-sm">
+        <div className="flex flex-col items-center justify-center text-center py-16 px-4 animate-fade-in border rounded-md bg-card">
+          <div className="bg-muted p-4 rounded-full mb-4">
+            <FileText className="h-8 w-8 text-muted-foreground" aria-hidden="true" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-1">Nenhuma petição gerada</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mb-6">
             As petições serão geradas automaticamente a partir dos contratos assinados.
           </p>
+          <Button asChild className="min-h-[44px]">
+            <Link to="/contratos">Ver Contratos</Link>
+          </Button>
         </div>
       )
     }
@@ -167,66 +173,86 @@ export default function Peticoes() {
       </div>
       <div className="flex flex-col md:flex-row gap-4 items-center">
         <div className="relative w-full md:w-96">
-          <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
+          <label htmlFor="search-peticoes" className="sr-only">
+            Buscar por nome do cliente
+          </label>
+          <Search
+            className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
           <Input
+            id="search-peticoes"
             placeholder="Buscar por nome do cliente..."
-            className="pl-8"
+            className="pl-8 w-full h-11 sm:h-10"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Todos">Todos os Status</SelectItem>
-            <SelectItem value="Rascunho">Rascunho</SelectItem>
-            <SelectItem value="Revisado">Revisado</SelectItem>
-            <SelectItem value="Finalizado">Finalizado</SelectItem>
-            <SelectItem value="Protocolado">Protocolado</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={tipo} onValueChange={setTipo}>
-          <SelectTrigger className="w-full md:w-[220px]">
-            <SelectValue placeholder="Tipo" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Todos">Todos os Tipos</SelectItem>
-            {modelos.map((m) => (
-              <SelectItem key={m.id} value={m.id}>
-                {m.titulo}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      {renderContent()}
-      {data.totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6">
-          <p className="text-sm text-muted-foreground">
-            Página {page} de {data.totalPages}
-          </p>
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
-              disabled={page === data.totalPages}
-            >
-              Próxima
-            </Button>
-          </div>
+        <div className="w-full md:w-[180px]">
+          <label htmlFor="filter-status" className="sr-only">
+            Filtrar por status
+          </label>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger id="filter-status" className="w-full h-11 sm:h-10">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos">Todos os Status</SelectItem>
+              <SelectItem value="Rascunho">Rascunho</SelectItem>
+              <SelectItem value="Revisado">Revisado</SelectItem>
+              <SelectItem value="Finalizado">Finalizado</SelectItem>
+              <SelectItem value="Protocolado">Protocolado</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      )}
+        <div className="w-full md:w-[220px]">
+          <label htmlFor="filter-tipo" className="sr-only">
+            Filtrar por tipo
+          </label>
+          <Select value={tipo} onValueChange={setTipo}>
+            <SelectTrigger id="filter-tipo" className="w-full h-11 sm:h-10">
+              <SelectValue placeholder="Tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Todos">Todos os Tipos</SelectItem>
+              {modelos.map((m) => (
+                <SelectItem key={m.id} value={m.id}>
+                  {m.titulo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <SectionErrorBoundary>
+        {renderContent()}
+        {data.totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <p className="text-sm text-muted-foreground">
+              Página {page} de {data.totalPages}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setPage((p) => Math.min(data.totalPages, p + 1))}
+                disabled={page === data.totalPages}
+              >
+                Próxima
+              </Button>
+            </div>
+          </div>
+        )}
+      </SectionErrorBoundary>
     </div>
   )
 }

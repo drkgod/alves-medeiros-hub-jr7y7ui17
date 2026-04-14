@@ -43,6 +43,32 @@ export default function AppLayout() {
   const [open, setOpen] = useState(false)
   const { user, signOut } = useAuth()
 
+  useEffect(() => {
+    const titles: Record<string, string> = {
+      '/dashboard': 'Dashboard',
+      '/diagnosticos': 'Diagnósticos',
+      '/diagnosticos/novo': 'Novo Diagnóstico',
+      '/peticoes': 'Petições',
+      '/contratos': 'Contratos',
+      '/drive': 'Google Drive',
+      '/videoaulas': 'Videoaulas',
+      '/configuracoes': 'Configurações',
+    }
+
+    let title = 'Alves Medeiros Hub'
+    const path = location.pathname
+
+    if (titles[path]) {
+      title = `${titles[path]} | Alves Medeiros Hub`
+    } else if (path.startsWith('/diagnosticos/')) {
+      title = 'Detalhe do Diagnóstico | Alves Medeiros Hub'
+    } else if (path.startsWith('/peticoes/')) {
+      title = 'Detalhe da Petição | Alves Medeiros Hub'
+    }
+
+    document.title = title
+  }, [location.pathname])
+
   const handleLogout = () => {
     signOut()
     navigate('/login')
@@ -84,14 +110,25 @@ export default function AppLayout() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-background focus:text-foreground focus:font-medium focus:border focus:rounded-md focus:shadow-md"
+      >
+        Pular para o conteúdo
+      </a>
       {/* Header */}
       <header className="sticky top-0 z-40 w-full glass-header">
         <div className="flex h-16 items-center px-4 md:px-6">
           <div className="flex items-center gap-4">
             <Sheet open={open} onOpenChange={setOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="lg:hidden">
-                  <Menu className="h-6 w-6" />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="lg:hidden"
+                  aria-label="Abrir menu de navegação"
+                >
+                  <Menu className="h-6 w-6" aria-hidden="true" />
                   <span className="sr-only">Abrir menu</span>
                 </Button>
               </SheetTrigger>
@@ -116,7 +153,11 @@ export default function AppLayout() {
             {user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Button
+                    variant="ghost"
+                    className="relative h-8 w-8 rounded-full"
+                    aria-label="Menu do usuário"
+                  >
                     <Avatar className="h-8 w-8">
                       <AvatarImage
                         src={user.avatar ? pb.files.getUrl(user, user.avatar) : ''}
@@ -156,7 +197,11 @@ export default function AppLayout() {
         </aside>
 
         {/* Main Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
+        <main
+          id="main-content"
+          className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 outline-none"
+          tabIndex={-1}
+        >
           <div className="mx-auto max-w-7xl">
             {/* The key prop forces a re-mount on route change, triggering the animation */}
             <div key={location.pathname} className="animate-fade-in-up">

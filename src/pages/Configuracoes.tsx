@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth'
 import pb from '@/lib/pocketbase/client'
 import { toast } from 'sonner'
 import { Check } from 'lucide-react'
+import { SectionErrorBoundary } from '@/components/SectionErrorBoundary'
 
 export default function Configuracoes() {
   const { user } = useAuth()
@@ -61,56 +62,62 @@ export default function Configuracoes() {
           Gerencie as preferências da sua conta e do sistema.
         </p>
       </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Perfil de Usuário</CardTitle>
-          <CardDescription>Atualize suas informações pessoais.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Configurações em desenvolvimento.</p>
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle>Integrações</CardTitle>
-          <CardDescription>Conecte serviços externos à sua conta.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <h3 className="font-medium text-base">Google Drive</h3>
-              <p className="text-sm text-muted-foreground">
-                Conecte seu Google Drive para gerenciar pastas e arquivos de clientes diretamente
-                pelo sistema.
-              </p>
-            </div>
-            {loading ? (
-              <Button disabled variant="outline">
-                Verificando...
-              </Button>
-            ) : googleConnected ? (
-              <div className="flex items-center text-sm font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
-                <Check className="w-4 h-4 mr-1.5" />
-                Conectado
+      <SectionErrorBoundary>
+        <Card>
+          <CardHeader>
+            <CardTitle>Perfil de Usuário</CardTitle>
+            <CardDescription>Atualize suas informações pessoais.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Configurações em desenvolvimento.</p>
+          </CardContent>
+        </Card>
+      </SectionErrorBoundary>
+      <SectionErrorBoundary>
+        <Card>
+          <CardHeader>
+            <CardTitle>Integrações</CardTitle>
+            <CardDescription>Conecte serviços externos à sua conta.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg">
+              <div>
+                <h3 className="font-medium text-base">Google Drive</h3>
+                <p className="text-sm text-muted-foreground">
+                  Conecte seu Google Drive para gerenciar pastas e arquivos de clientes diretamente
+                  pelo sistema.
+                </p>
               </div>
-            ) : (
-              <Button onClick={handleConnectGoogle} variant="outline">
-                Conectar Conta
-              </Button>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              {loading ? (
+                <Button disabled variant="outline">
+                  Verificando...
+                </Button>
+              ) : googleConnected ? (
+                <div className="flex items-center text-sm font-medium text-green-700 bg-green-50 px-3 py-1.5 rounded-full border border-green-200">
+                  <Check className="w-4 h-4 mr-1.5" />
+                  Conectado
+                </div>
+              ) : (
+                <Button onClick={handleConnectGoogle} variant="outline">
+                  Conectar Conta
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </SectionErrorBoundary>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Preferências do Sistema</CardTitle>
-          <CardDescription>Ajuste notificações e temas.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">Configurações em desenvolvimento.</p>
-        </CardContent>
-      </Card>
+      <SectionErrorBoundary>
+        <Card>
+          <CardHeader>
+            <CardTitle>Preferências do Sistema</CardTitle>
+            <CardDescription>Ajuste notificações e temas.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">Configurações em desenvolvimento.</p>
+          </CardContent>
+        </Card>
+      </SectionErrorBoundary>
     </div>
   )
 }

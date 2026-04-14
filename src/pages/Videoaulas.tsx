@@ -14,6 +14,7 @@ import {
 import { PlayCircle, CheckCircle2, AlertCircle } from 'lucide-react'
 import { type VideoAula } from '@/services/videoaulas'
 import { cn } from '@/lib/utils'
+import { SectionErrorBoundary } from '@/components/SectionErrorBoundary'
 
 export default function Videoaulas() {
   const {
@@ -97,72 +98,78 @@ export default function Videoaulas() {
         <p className="text-muted-foreground mt-2">Treinamentos e capacitação para a equipe.</p>
       </div>
 
-      <Card className="bg-primary/5 border-primary/10">
-        <CardContent className="pt-6">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium">Progresso Geral</span>
-            <span className="text-sm text-muted-foreground">
-              {globalProgress.watched} de {globalProgress.total} aulas concluídas (
-              {globalProgress.percentage}%)
-            </span>
-          </div>
-          <Progress value={globalProgress.percentage} className="h-2" />
-        </CardContent>
-      </Card>
+      <SectionErrorBoundary>
+        <Card className="bg-primary/5 border-primary/10">
+          <CardContent className="pt-6">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium">Progresso Geral</span>
+              <span className="text-sm text-muted-foreground">
+                {globalProgress.watched} de {globalProgress.total} aulas concluídas (
+                {globalProgress.percentage}%)
+              </span>
+            </div>
+            <Progress value={globalProgress.percentage} className="h-2" />
+          </CardContent>
+        </Card>
+      </SectionErrorBoundary>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {modulos.map((modulo) => {
-          const progress = getModuloProgress(modulo.nome)
-          return (
-            <Card key={modulo.nome} className="flex flex-col">
-              <CardHeader>
-                <CardTitle>{modulo.nome}</CardTitle>
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-2 text-sm">
-                    <span className="text-muted-foreground">
-                      {progress.watched} de {progress.total} concluídas
-                    </span>
-                    <span className="font-medium">{progress.percentage}%</span>
-                  </div>
-                  <Progress value={progress.percentage} className="h-1.5" />
-                </div>
-              </CardHeader>
-              <CardContent className="flex-1 space-y-2">
-                {modulo.videos.map((video) => {
-                  const watched = isVideoWatched(video.id)
-                  return (
-                    <div
-                      key={video.id}
-                      onClick={() => handleVideoClick(video)}
-                      className={cn(
-                        'flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors group',
-                        watched ? 'bg-muted/50 hover:bg-muted' : 'hover:bg-accent',
-                      )}
-                    >
-                      {watched ? (
-                        <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
-                      ) : (
-                        <PlayCircle className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className={cn(
-                            'text-sm font-medium truncate',
-                            watched && 'text-muted-foreground line-through',
-                          )}
-                        >
-                          {video.titulo}
-                        </p>
-                        <p className="text-xs text-muted-foreground">{video.duracao_minutos}min</p>
-                      </div>
+      <SectionErrorBoundary>
+        <div className="grid gap-6 md:grid-cols-2">
+          {modulos.map((modulo) => {
+            const progress = getModuloProgress(modulo.nome)
+            return (
+              <Card key={modulo.nome} className="flex flex-col">
+                <CardHeader>
+                  <CardTitle>{modulo.nome}</CardTitle>
+                  <div className="mt-4">
+                    <div className="flex justify-between items-center mb-2 text-sm">
+                      <span className="text-muted-foreground">
+                        {progress.watched} de {progress.total} concluídas
+                      </span>
+                      <span className="font-medium">{progress.percentage}%</span>
                     </div>
-                  )
-                })}
-              </CardContent>
-            </Card>
-          )
-        })}
-      </div>
+                    <Progress value={progress.percentage} className="h-1.5" />
+                  </div>
+                </CardHeader>
+                <CardContent className="flex-1 space-y-2">
+                  {modulo.videos.map((video) => {
+                    const watched = isVideoWatched(video.id)
+                    return (
+                      <div
+                        key={video.id}
+                        onClick={() => handleVideoClick(video)}
+                        className={cn(
+                          'flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors group',
+                          watched ? 'bg-muted/50 hover:bg-muted' : 'hover:bg-accent',
+                        )}
+                      >
+                        {watched ? (
+                          <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                        ) : (
+                          <PlayCircle className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p
+                            className={cn(
+                              'text-sm font-medium truncate',
+                              watched && 'text-muted-foreground line-through',
+                            )}
+                          >
+                            {video.titulo}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {video.duracao_minutos}min
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </CardContent>
+              </Card>
+            )
+          })}
+        </div>
+      </SectionErrorBoundary>
 
       <Dialog open={!!selectedVideo} onOpenChange={(open) => !open && setSelectedVideo(null)}>
         <DialogContent className="sm:max-w-3xl">

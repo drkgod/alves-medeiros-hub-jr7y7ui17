@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
+import { SectionErrorBoundary } from '@/components/SectionErrorBoundary'
 
 const ESTADOS = [
   'AC',
@@ -227,177 +228,185 @@ export default function NovoDiagnostico() {
         </div>
       </div>
 
-      <div className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-sm">
-        <h2 className="text-[20px] font-bold mb-6">
-          {step === 1 ? 'Dados Básicos' : step === 7 ? 'Revisão e Confirmação' : currentArea?.title}
-        </h2>
+      <SectionErrorBoundary>
+        <div className="bg-card border border-border rounded-xl p-6 md:p-8 shadow-sm">
+          <h2 className="text-[20px] font-bold mb-6">
+            {step === 1
+              ? 'Dados Básicos'
+              : step === 7
+                ? 'Revisão e Confirmação'
+                : currentArea?.title}
+          </h2>
 
-        <div className="space-y-6">
-          {step === 1 && (
-            <div className="space-y-5 animate-fade-in">
-              <div className="space-y-2">
-                <Label htmlFor="municipio">
-                  Nome do Município <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="municipio"
-                  placeholder="Ex: Natal"
-                  value={formData.municipio}
-                  onChange={(e) => setFormData((p) => ({ ...p, municipio: e.target.value }))}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="estado">
-                  Estado <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={formData.estado}
-                  onValueChange={(v) => setFormData((p) => ({ ...p, estado: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ESTADOS.map((uf) => (
-                      <SelectItem key={uf} value={uf}>
-                        {uf}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="populacao">População Estimada</Label>
-                <Input
-                  id="populacao"
-                  type="number"
-                  placeholder="Ex: 50000"
-                  value={formData.populacao_estimada}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, populacao_estimada: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="tipo">
-                  Tipo <span className="text-destructive">*</span>
-                </Label>
-                <Select
-                  value={formData.tipo_cliente}
-                  onValueChange={(v) => setFormData((p) => ({ ...p, tipo_cliente: v }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o tipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Prefeitura">Prefeitura</SelectItem>
-                    <SelectItem value="Câmara Municipal">Câmara Municipal</SelectItem>
-                    <SelectItem value="Autarquia">Autarquia</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-
-          {currentArea && (
-            <div className="space-y-8 animate-fade-in">
-              {currentArea.fields.map((field) => (
-                <div key={field.key} className="mb-6">
-                  <div className="flex justify-between items-end mb-4">
-                    <Label className="text-base font-medium">{field.label}</Label>
-                    <span className="text-2xl font-bold text-primary leading-none">
-                      {formData[field.key]}
-                    </span>
-                  </div>
-                  <Slider
-                    min={1}
-                    max={10}
-                    step={1}
-                    value={[formData[field.key]]}
-                    onValueChange={(val) => setFormData((p) => ({ ...p, [field.key]: val[0] }))}
-                    className="mb-3"
+          <div className="space-y-6">
+            {step === 1 && (
+              <div className="space-y-5 animate-fade-in">
+                <div className="space-y-2">
+                  <Label htmlFor="municipio">
+                    Nome do Município <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="municipio"
+                    className="h-11"
+                    placeholder="Ex: Natal"
+                    value={formData.municipio}
+                    onChange={(e) => setFormData((p) => ({ ...p, municipio: e.target.value }))}
                   />
-                  <div className="flex justify-between text-[11px] text-muted-foreground font-medium">
-                    <span>Crítico</span>
-                    <span>Excelente</span>
-                  </div>
                 </div>
-              ))}
-            </div>
-          )}
+                <div className="space-y-2">
+                  <Label htmlFor="estado">
+                    Estado <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={formData.estado}
+                    onValueChange={(v) => setFormData((p) => ({ ...p, estado: v }))}
+                  >
+                    <SelectTrigger id="estado" className="h-11">
+                      <SelectValue placeholder="Selecione o estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ESTADOS.map((uf) => (
+                        <SelectItem key={uf} value={uf}>
+                          {uf}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="populacao">População Estimada</Label>
+                  <Input
+                    id="populacao"
+                    type="number"
+                    className="h-11"
+                    placeholder="Ex: 50000"
+                    value={formData.populacao_estimada}
+                    onChange={(e) =>
+                      setFormData((p) => ({ ...p, populacao_estimada: e.target.value }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="tipo">
+                    Tipo <span className="text-destructive">*</span>
+                  </Label>
+                  <Select
+                    value={formData.tipo_cliente}
+                    onValueChange={(v) => setFormData((p) => ({ ...p, tipo_cliente: v }))}
+                  >
+                    <SelectTrigger id="tipo" className="h-11">
+                      <SelectValue placeholder="Selecione o tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Prefeitura">Prefeitura</SelectItem>
+                      <SelectItem value="Câmara Municipal">Câmara Municipal</SelectItem>
+                      <SelectItem value="Autarquia">Autarquia</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
 
-          {step === 7 &&
-            (() => {
-              const { scores, score_geral, pontos_criticos } = getAverages()
-              return (
-                <div className="space-y-8 animate-fade-in">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {Object.entries(scores).map(([area, avg]) => (
-                      <div
-                        key={area}
-                        className="p-4 rounded-lg border bg-muted/30 flex flex-col justify-between"
-                      >
-                        <p className="text-sm text-muted-foreground mb-2">{area}</p>
-                        <p className={cn('text-2xl font-bold', getScoreColor(avg))}>
-                          {avg.toFixed(1)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex flex-col items-center justify-center p-8 bg-primary/5 border border-primary/20 rounded-xl">
-                    <span className="text-lg font-semibold text-muted-foreground mb-2">
-                      Score Geral
-                    </span>
-                    <span className="text-[48px] font-bold text-primary leading-none">
-                      {score_geral.toFixed(1)}
-                    </span>
-                  </div>
-
-                  {pontos_criticos.length > 0 && (
-                    <div className="space-y-3 p-6 bg-red-50 dark:bg-red-950 rounded-xl border border-red-100 dark:border-red-900">
-                      <h3 className="text-lg font-semibold text-destructive">
-                        Pontos Críticos (Abaixo de 5)
-                      </h3>
-                      <ul className="space-y-2 text-sm text-destructive/90">
-                        {pontos_criticos.map((p) => (
-                          <li key={p} className="flex items-center gap-2">
-                            <div className="h-2 w-2 rounded-full bg-destructive shrink-0" />
-                            <span>{p}</span>
-                          </li>
-                        ))}
-                      </ul>
+            {currentArea && (
+              <div className="space-y-8 animate-fade-in">
+                {currentArea.fields.map((field) => (
+                  <div key={field.key} className="mb-6">
+                    <div className="flex justify-between items-end mb-4">
+                      <Label className="text-base font-medium">{field.label}</Label>
+                      <span className="text-2xl font-bold text-primary leading-none">
+                        {formData[field.key]}
+                      </span>
                     </div>
-                  )}
-                </div>
-              )
-            })()}
-        </div>
+                    <Slider
+                      min={1}
+                      max={10}
+                      step={1}
+                      value={[formData[field.key]]}
+                      onValueChange={(val) => setFormData((p) => ({ ...p, [field.key]: val[0] }))}
+                      className="mb-3"
+                    />
+                    <div className="flex justify-between text-[11px] text-muted-foreground font-medium">
+                      <span>Crítico</span>
+                      <span>Excelente</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
 
-        <div className="flex flex-col-reverse md:flex-row md:justify-between pt-6 border-t mt-8 gap-4">
-          <Button
-            variant="outline"
-            className="h-[44px] w-full md:w-auto px-8"
-            onClick={() => setStep((s) => s - 1)}
-            disabled={step === 1}
-          >
-            Anterior
-          </Button>
-          {step < 7 ? (
+            {step === 7 &&
+              (() => {
+                const { scores, score_geral, pontos_criticos } = getAverages()
+                return (
+                  <div className="space-y-8 animate-fade-in">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(scores).map(([area, avg]) => (
+                        <div
+                          key={area}
+                          className="p-4 rounded-lg border bg-muted/30 flex flex-col justify-between"
+                        >
+                          <p className="text-sm text-muted-foreground mb-2">{area}</p>
+                          <p className={cn('text-2xl font-bold', getScoreColor(avg))}>
+                            {avg.toFixed(1)}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex flex-col items-center justify-center p-8 bg-primary/5 border border-primary/20 rounded-xl">
+                      <span className="text-lg font-semibold text-muted-foreground mb-2">
+                        Score Geral
+                      </span>
+                      <span className="text-[48px] font-bold text-primary leading-none">
+                        {score_geral.toFixed(1)}
+                      </span>
+                    </div>
+
+                    {pontos_criticos.length > 0 && (
+                      <div className="space-y-3 p-6 bg-red-50 dark:bg-red-950 rounded-xl border border-red-100 dark:border-red-900">
+                        <h3 className="text-lg font-semibold text-destructive">
+                          Pontos Críticos (Abaixo de 5)
+                        </h3>
+                        <ul className="space-y-2 text-sm text-destructive/90">
+                          {pontos_criticos.map((p) => (
+                            <li key={p} className="flex items-center gap-2">
+                              <div className="h-2 w-2 rounded-full bg-destructive shrink-0" />
+                              <span>{p}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )
+              })()}
+          </div>
+
+          <div className="flex flex-col-reverse md:flex-row md:justify-between pt-6 border-t mt-8 gap-4">
             <Button
+              variant="outline"
               className="h-[44px] w-full md:w-auto px-8"
-              onClick={() => setStep((s) => s + 1)}
-              disabled={step === 1 && !isStep1Valid}
+              onClick={() => setStep((s) => s - 1)}
+              disabled={step === 1}
             >
-              Próximo
+              Anterior
             </Button>
-          ) : (
-            <Button className="h-[44px] w-full md:w-auto px-8" onClick={handleSubmit}>
-              Confirmar
-            </Button>
-          )}
+            {step < 7 ? (
+              <Button
+                className="h-[44px] w-full md:w-auto px-8"
+                onClick={() => setStep((s) => s + 1)}
+                disabled={step === 1 && !isStep1Valid}
+              >
+                Próximo
+              </Button>
+            ) : (
+              <Button className="h-[44px] w-full md:w-auto px-8" onClick={handleSubmit}>
+                Confirmar
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
+      </SectionErrorBoundary>
     </div>
   )
 }
