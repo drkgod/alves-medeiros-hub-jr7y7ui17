@@ -16,6 +16,7 @@ const Login = lazy(() => import('./pages/Login'))
 const Dashboard = lazy(() => import('./pages/Dashboard'))
 const Diagnosticos = lazy(() => import('./pages/Diagnosticos'))
 const NovoDiagnostico = lazy(() => import('./pages/NovoDiagnostico'))
+const DetalheDiagnostico = lazy(() => import('./pages/DetalheDiagnostico'))
 const Peticoes = lazy(() => import('./pages/Peticoes'))
 const DetalhePeticao = lazy(() => import('./pages/DetalhePeticao'))
 const Contratos = lazy(() => import('./pages/Contratos'))
@@ -43,6 +44,7 @@ const App = () => (
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/diagnosticos" element={<Diagnosticos />} />
                     <Route path="/diagnosticos/novo" element={<NovoDiagnostico />} />
+                    <Route path="/diagnosticos/:id" element={<DetalheDiagnostico />} />
                     <Route path="/peticoes" element={<Peticoes />} />
                     <Route path="/peticoes/:id" element={<DetalhePeticao />} />
                     <Route path="/contratos" element={<Contratos />} />
