@@ -16,15 +16,16 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
 import { useDashboard } from '@/hooks/use-dashboard'
+import { cn } from '@/lib/utils'
 
 const statusColors: Record<string, string> = {
-  pendente_processamento: 'bg-yellow-500 text-white hover:bg-yellow-600',
-  processado: 'bg-green-500 text-white hover:bg-green-600',
-  erro: 'bg-red-500 text-white hover:bg-red-600',
-  rascunho: 'bg-gray-500 text-white hover:bg-gray-600',
-  revisado: 'bg-blue-500 text-white hover:bg-blue-600',
-  finalizado: 'bg-green-500 text-white hover:bg-green-600',
-  protocolado: 'bg-purple-500 text-white hover:bg-purple-600',
+  pendente_processamento: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+  processado: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+  erro: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+  rascunho: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+  revisado: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+  finalizado: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+  protocolado: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
 }
 
 const statusLabels: Record<string, string> = {
@@ -42,48 +43,46 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6">
+      <div className="space-y-6 animate-pulse">
         <div>
           <Skeleton className="h-9 w-48 mb-2" />
           <Skeleton className="h-5 w-96 max-w-full" />
         </div>
         <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <Skeleton className="h-4 w-1/2" />
-                <Skeleton className="h-4 w-4" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-8 w-16 mb-1" />
-                <Skeleton className="h-3 w-3/4" />
-              </CardContent>
+            <Card key={i} className="p-6 border border-border bg-card">
+              <Skeleton className="w-10 h-10 rounded-xl" />
+              <Skeleton className="h-5 w-1/2 mt-4" />
+              <Skeleton className="h-8 w-1/4 mt-1" />
+              <Skeleton className="h-4 w-2/3 mt-1" />
             </Card>
           ))}
         </div>
-        <Card className="mt-6">
-          <CardHeader>
+        <Card className="mt-6 border border-border bg-card">
+          <div className="p-6 pb-0 mb-4">
             <Skeleton className="h-6 w-48" />
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="flex items-center space-x-4">
-                  <Skeleton className="h-10 w-10 rounded-full" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-4 w-1/3" />
-                    <Skeleton className="h-3 w-1/4" />
-                  </div>
-                  <Skeleton className="h-6 w-20 rounded-full" />
-                </div>
-              ))}
-            </div>
-          </CardContent>
+          </div>
+          <div className="flex flex-col">
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className="flex flex-row items-center gap-3 py-3 px-4 border-b border-border last:border-0"
+              >
+                <Skeleton className="w-9 h-9 rounded-full shrink-0" />
+                <Skeleton className="h-5 w-1/3" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-4 w-24 ml-auto shrink-0" />
+              </div>
+            ))}
+          </div>
         </Card>
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-3 mt-8">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full" />
-          ))}
+        <div>
+          <Skeleton className="h-6 w-32 mt-8 mb-4" />
+          <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className="h-24 w-full rounded-lg" />
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -137,84 +136,93 @@ export default function Dashboard() {
       </div>
 
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Contratos Pendentes</CardTitle>
-            <FileSignature className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.pendingContracts || 0}</div>
-            <p className="text-xs text-muted-foreground">Aguardando processamento</p>
-          </CardContent>
+        <Card className="p-6 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-border bg-card">
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+            <FileSignature className="w-5 h-5 text-primary" />
+          </div>
+          <h3 className="text-sm font-medium text-muted-foreground mt-4">Contratos Pendentes</h3>
+          <div className="text-3xl font-bold text-foreground mt-1">
+            {stats?.pendingContracts || 0}
+          </div>
+          <p className="text-[13px] text-muted-foreground mt-1">Aguardando processamento</p>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Petições Geradas</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.totalPetitions || 0}</div>
-            <p className="text-xs text-muted-foreground">Total de petições</p>
-          </CardContent>
+        <Card className="p-6 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-border bg-card">
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+            <FileText className="w-5 h-5 text-primary" />
+          </div>
+          <h3 className="text-sm font-medium text-muted-foreground mt-4">Petições Geradas</h3>
+          <div className="text-3xl font-bold text-foreground mt-1">
+            {stats?.totalPetitions || 0}
+          </div>
+          <p className="text-[13px] text-muted-foreground mt-1">Total de petições</p>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Diagnósticos Realizados</CardTitle>
-            <ClipboardCheck className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.completedDiagnostics || 0}</div>
-            <p className="text-xs text-muted-foreground">Prefeituras diagnosticadas</p>
-          </CardContent>
+        <Card className="p-6 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-border bg-card">
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+            <ClipboardCheck className="w-5 h-5 text-primary" />
+          </div>
+          <h3 className="text-sm font-medium text-muted-foreground mt-4">
+            Diagnósticos Realizados
+          </h3>
+          <div className="text-3xl font-bold text-foreground mt-1">
+            {stats?.completedDiagnostics || 0}
+          </div>
+          <p className="text-[13px] text-muted-foreground mt-1">Prefeituras diagnosticadas</p>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Videoaulas Assistidas</CardTitle>
-            <PlayCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats?.courseProgress || 0}%</div>
-            <p className="text-xs text-muted-foreground">Progresso geral</p>
-          </CardContent>
+        <Card className="p-6 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.06)] border border-border bg-card">
+          <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center">
+            <PlayCircle className="w-5 h-5 text-primary" />
+          </div>
+          <h3 className="text-sm font-medium text-muted-foreground mt-4">Videoaulas Assistidas</h3>
+          <div className="text-3xl font-bold text-foreground mt-1">
+            {stats?.courseProgress || 0}%
+          </div>
+          <p className="text-[13px] text-muted-foreground mt-1">Progresso geral</p>
         </Card>
       </div>
 
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>Atividade Recente</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {recentActivity.map((item) => (
-              <div key={`${item.type}-${item.id}`} className="flex items-center space-x-4">
-                <div className="bg-primary/10 p-2 rounded-full">
-                  {item.type === 'contrato' ? (
-                    <FileSignature className="h-5 w-5 text-primary" />
-                  ) : (
-                    <FileText className="h-5 w-5 text-primary" />
+      <Card className="mt-6 border border-border bg-card">
+        <div className="p-6 pb-0 mb-4">
+          <h2 className="text-lg font-semibold">Atividade Recente</h2>
+        </div>
+        <div className="flex flex-col">
+          {recentActivity.map((item) => (
+            <div
+              key={`${item.type}-${item.id}`}
+              className="flex flex-row items-center gap-3 py-3 px-4 border-b border-border last:border-0"
+            >
+              <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center shrink-0">
+                {item.type === 'contrato' ? (
+                  <FileSignature className="w-4 h-4 text-primary" />
+                ) : (
+                  <FileText className="w-4 h-4 text-primary" />
+                )}
+              </div>
+              <div className="flex items-center gap-3 flex-1 overflow-hidden">
+                <p className="text-sm font-medium truncate">{item.title}</p>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'px-2 py-0.5 text-xs font-medium rounded-full border-transparent hover:opacity-80 shrink-0',
+                    statusColors[item.status] || statusColors.rascunho,
                   )}
-                </div>
-                <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium leading-none">{item.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {formatDistanceToNow(new Date(item.created), { addSuffix: true, locale: ptBR })}
-                  </p>
-                </div>
-                <Badge className={statusColors[item.status] || 'bg-gray-500 text-white'}>
+                >
                   {statusLabels[item.status] || item.status}
                 </Badge>
               </div>
-            ))}
-            {recentActivity.length === 0 && (
-              <div className="text-center py-4 text-muted-foreground">
-                Nenhuma atividade recente.
-              </div>
-            )}
-          </div>
-        </CardContent>
+              <p className="text-[13px] text-muted-foreground ml-auto shrink-0">
+                {formatDistanceToNow(new Date(item.created), { addSuffix: true, locale: ptBR })}
+              </p>
+            </div>
+          ))}
+          {recentActivity.length === 0 && (
+            <div className="text-center py-6 text-muted-foreground text-sm">
+              Nenhuma atividade recente.
+            </div>
+          )}
+        </div>
       </Card>
 
       <div>
@@ -222,38 +230,32 @@ export default function Dashboard() {
         <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
           <Link
             to="/diagnosticos/novo"
-            className="block outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+            className="block p-5 rounded-lg border border-border bg-card transition-all duration-200 ease-out hover:border-primary hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Card className="hover:bg-muted/50 transition-colors h-full flex items-center justify-center">
-              <CardContent className="p-6 flex flex-col items-center justify-center space-y-2 text-center w-full">
-                <ClipboardCheck className="h-8 w-8 text-primary mb-2" />
-                <span className="font-medium">Novo Diagnóstico</span>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center text-center">
+              <ClipboardCheck className="w-6 h-6 text-primary" />
+              <span className="text-sm font-semibold mt-2">Novo Diagnóstico</span>
+            </div>
           </Link>
 
           <Link
             to="/peticoes"
-            className="block outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+            className="block p-5 rounded-lg border border-border bg-card transition-all duration-200 ease-out hover:border-primary hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Card className="hover:bg-muted/50 transition-colors h-full flex items-center justify-center">
-              <CardContent className="p-6 flex flex-col items-center justify-center space-y-2 text-center w-full">
-                <FileText className="h-8 w-8 text-primary mb-2" />
-                <span className="font-medium">Ver Petições</span>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center text-center">
+              <FileText className="w-6 h-6 text-primary" />
+              <span className="text-sm font-semibold mt-2">Ver Petições</span>
+            </div>
           </Link>
 
           <Link
             to="/drive"
-            className="block outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+            className="block p-5 rounded-lg border border-border bg-card transition-all duration-200 ease-out hover:border-primary hover:shadow-[0_2px_8px_rgba(0,0,0,0.04)] cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Card className="hover:bg-muted/50 transition-colors h-full flex items-center justify-center">
-              <CardContent className="p-6 flex flex-col items-center justify-center space-y-2 text-center w-full">
-                <FolderOpen className="h-8 w-8 text-primary mb-2" />
-                <span className="font-medium">Abrir Drive</span>
-              </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center text-center">
+              <FolderOpen className="w-6 h-6 text-primary" />
+              <span className="text-sm font-semibold mt-2">Abrir Drive</span>
+            </div>
           </Link>
         </div>
       </div>
