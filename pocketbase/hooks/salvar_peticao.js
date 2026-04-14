@@ -1,16 +1,36 @@
 routerAdd('POST', '/backend/v1/hooks/salvar-peticao', function (e) {
   try {
-    const info = $apis.requestInfo(e)
+    let body = null
+    let headers = {}
+
+    try {
+      const info = e.requestInfo()
+      body = info.body
+      headers = info.headers || {}
+    } catch (errInfo) {
+      try {
+        const rawBody = readerToString(e.request.body)
+        body = JSON.parse(rawBody)
+        headers = {
+          'x-api-key': e.request.header.get('x-api-key') || e.request.header.get('X-Api-Key'),
+          x_api_key: e.request.header.get('x_api_key') || e.request.header.get('X_Api_Key'),
+        }
+      } catch (errFallback) {
+        return e.json(400, { message: 'Nao foi possivel ler o body da requisicao' })
+      }
+    }
+
+    if (!body) {
+      return e.json(400, { message: 'Nao foi possivel ler o body da requisicao' })
+    }
 
     const expectedKey = $secrets.get('WORKSPACE_BRIDGE_KEY') || 'WORKSPACE_BRIDGE_KEY_2026'
-    const headers = info.headers || {}
     const providedKey = headers['x-api-key'] || headers['x_api_key']
 
     if (providedKey !== expectedKey) {
       return e.json(401, { message: 'Nao autorizado' })
     }
 
-    const body = info.body || {}
     if (!body.contrato_id || !body.tipo_peticao || !body.conteudo_gerado) {
       return e.json(400, {
         message: 'Campos obrigatorios ausentes: contrato_id, tipo_peticao, conteudo_gerado',
@@ -33,7 +53,9 @@ routerAdd('POST', '/backend/v1/hooks/salvar-peticao', function (e) {
       peticao.set('conteudo_gerado', body.conteudo_gerado)
       peticao.set('status', 'rascunho')
 
-      if (body.modelo_id) {
+      if (body.modelo) {
+        peticao.set('modelo', body.modelo)
+      } else if (body.modelo_id) {
         peticao.set('modelo', body.modelo_id)
       }
 
