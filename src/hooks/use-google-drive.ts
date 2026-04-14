@@ -51,7 +51,7 @@ export function useGoogleDrive() {
       try {
         const res = await pb.send('/backend/v1/google-drive-list', {
           method: 'POST',
-          body: JSON.stringify({ user_id: user.id, folder_id: folderId }),
+          body: JSON.stringify({ user_id: user.id, parent_id: folderId }),
         })
         setFiles(res.files || [])
       } catch (err: any) {
@@ -93,7 +93,7 @@ export function useGoogleDrive() {
         action: 'rename',
         user_id: user.id,
         file_id: fileId,
-        new_name: newName,
+        name: newName,
       }),
     })
   }
