@@ -7,19 +7,19 @@ routerAdd('POST', '/backend/v1/hooks/salvar-peticao', function (e) {
     const providedKey = headers['x-api-key'] || headers['x_api_key']
 
     if (providedKey !== expectedKey) {
-      return e.json(401, { error: 'Nao autorizado' })
+      return e.json(401, { message: 'Nao autorizado' })
     }
 
     const body = info.body || {}
     if (!body.contrato_id || !body.tipo_peticao || !body.conteudo_gerado) {
-      return e.json(400, { error: 'Dados inválidos' })
+      return e.json(400, { message: 'Dados invalidos' })
     }
 
     let contrato
     try {
       contrato = $app.findRecordById('contratos_assinados', body.contrato_id)
     } catch (err) {
-      return e.json(404, { error: 'Contrato não encontrado' })
+      return e.json(404, { message: 'Contrato nao encontrado' })
     }
 
     $app.runInTransaction(function (txApp) {
@@ -49,7 +49,7 @@ routerAdd('POST', '/backend/v1/hooks/salvar-peticao', function (e) {
 
     return e.json(200, { id: e.get('new_id') })
   } catch (err) {
-    console.log('Erro ao salvar peticao:', err.message || err)
-    return e.json(500, { error: 'Erro ao salvar petição', detail: err.message || 'Erro interno' })
+    console.log('salvar-peticao error:', err, err.message)
+    return e.json(500, { message: 'Erro ao salvar peticao', detail: err.message || 'unknown' })
   }
 })
