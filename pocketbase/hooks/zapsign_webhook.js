@@ -1,7 +1,27 @@
 routerAdd('POST', '/backend/v1/hooks/zapsign', (e) => {
   try {
-    const reqInfo = $apis.requestInfo(e)
-    const body = reqInfo.body || {}
+    let body = null
+
+    try {
+      body = e.requestInfo().body
+    } catch (err) {
+      // Ignora erro na primeira tentativa
+    }
+
+    if (!body || Object.keys(body).length === 0) {
+      try {
+        const rawBody = readerToString(e.request.body)
+        if (rawBody) {
+          body = JSON.parse(rawBody)
+        }
+      } catch (err) {
+        // Ignora erro no fallback
+      }
+    }
+
+    if (!body || Object.keys(body).length === 0) {
+      return e.json(400, { message: 'Nao foi possivel ler o body da requisicao' })
+    }
 
     if (!body.event_type || !body.token) {
       return e.json(400, { message: 'Payload invalido' })
@@ -21,12 +41,14 @@ routerAdd('POST', '/backend/v1/hooks/zapsign', (e) => {
         return e.json(200, { message: 'Contrato ja processado', id: existing.id })
       }
     } catch (_) {
-      // Not found, process normally
+      // Nao encontrado, processa normalmente
     }
 
     let signer = body.signer_who_signed
     if (!signer && body.signers && Array.isArray(body.signers)) {
-      signer = body.signers.find((s) => s.status === 'signed')
+      signer = body.signers.find(function (s) {
+        return s.status === 'signed'
+      })
     }
 
     if (!signer) {

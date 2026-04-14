@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T20:02:42.141Z",
+  "generatedAt": "2026-04-14T20:15:12.797Z",
   "collections": [
     {
       "name": "users",
@@ -62,18 +62,6 @@
           "system": false
         },
         {
-          "name": "nome_signatario",
-          "type": "text",
-          "required": true,
-          "system": false
-        },
-        {
-          "name": "cpf",
-          "type": "text",
-          "required": true,
-          "system": false
-        },
-        {
           "name": "email",
           "type": "text",
           "required": false,
@@ -123,6 +111,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "cpf",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "nome_signatario",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
