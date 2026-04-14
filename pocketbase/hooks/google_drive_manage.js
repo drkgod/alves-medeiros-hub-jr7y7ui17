@@ -11,8 +11,8 @@ routerAdd(
     }
 
     const userId = authUser.id
-    const CLIENT_ID = '785736878856-mfjn2mv3nsgiik16tmlrnqt3mv3tvali.apps.googleusercontent.com'
-    const CLIENT_SECRET = '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'
+    const CLIENT_ID = $secrets.get('CLIENT_ID')
+    const CLIENT_SECRET = $secrets.get('CLIENT_SECRET')
 
     let tokenRecord
     try {

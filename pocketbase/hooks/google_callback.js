@@ -9,9 +9,9 @@ routerAdd('GET', '/backend/v1/google-callback', (e) => {
     )
   }
 
-  const CLIENT_ID = '785736878856-mfjn2mv3nsgiik16tmlrnqt3mv3tvali.apps.googleusercontent.com'
-  const CLIENT_SECRET = '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'
-  const REDIRECT_URI = 'https://alves-medeiros-hub-6074d.goskip.app/backend/v1/google-callback'
+  const CLIENT_ID = $secrets.get('CLIENT_ID')
+  const CLIENT_SECRET = $secrets.get('CLIENT_SECRET')
+  const REDIRECT_URI = $secrets.get('REDIRECT_URI')
 
   try {
     const res = $http.send({
