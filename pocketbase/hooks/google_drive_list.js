@@ -13,6 +13,7 @@ routerAdd(
     const userId = authUser.id
     const CLIENT_ID = $secrets.get('CLIENT_ID')
     const CLIENT_SECRET = $secrets.get('CLIENT_SECRET')
+    const REDIRECT_URI = $secrets.get('REDIRECT_URI')
 
     let tokenRecord
     try {

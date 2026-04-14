@@ -5,7 +5,6 @@ routerAdd('GET', '/backend/v1/google-auth', (e) => {
   }
 
   const CLIENT_ID = $secrets.get('CLIENT_ID')
-  // Enforcing Skip Cloud architecture standards for custom route prefixes
   const REDIRECT_URI = $secrets.get('REDIRECT_URI')
 
   const scope = encodeURIComponent('https://www.googleapis.com/auth/drive')
