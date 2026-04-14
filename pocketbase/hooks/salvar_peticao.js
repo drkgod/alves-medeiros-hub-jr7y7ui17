@@ -52,6 +52,4 @@ routerAdd('POST', '/backend/v1/hooks/salvar-peticao', function (e) {
     return e.json(200, { id: e.get('new_id') })
   } catch (err) {
     console.log('salvar-peticao error:', err)
-    return e.json(500, { message: 'Erro ao salvar peticao', detail: err.message || 'unknown' })
-  }
-})
+    return e.json(500, { message: 'Erro ao s
