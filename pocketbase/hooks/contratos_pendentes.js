@@ -1,6 +1,6 @@
 routerAdd('GET', '/backend/v1/hooks/contratos-pendentes', function (e) {
   try {
-    const info = $apis.requestInfo(e)
+    const info = e.requestInfo()
     const headers = info.headers || {}
     const apiKey = headers['x-api-key'] || headers['x_api_key']
 
