@@ -132,13 +132,13 @@ export function useGoogleDrive() {
     const left = window.screen.width / 2 - w / 2
     const top = window.screen.height / 2 - h / 2
     const popup = window.open(
-      `/backend/v1/google-auth?user_id=${user.id}`,
+      `${pb.baseUrl}/backend/v1/google-auth?user_id=${user.id}`,
       'Google Auth',
       `width=${w},height=${h},top=${top},left=${left}`,
     )
 
     const listener = (event: MessageEvent) => {
-      if (event.data?.type === 'google-connected') {
+      if (event.data === 'google_connected') {
         setIsConnected(true)
         toast.success('Google Drive conectado com sucesso!')
         if (popup) popup.close()
