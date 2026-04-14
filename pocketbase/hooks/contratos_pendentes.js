@@ -1,11 +1,12 @@
-routerAdd('GET', '/backend/v1/hooks/contratos-pendentes', (e) => {
+routerAdd('GET', '/backend/v1/hooks/contratos-pendentes', function (e) {
   try {
     const info = $apis.requestInfo(e)
-    const apiKey = info.headers['x-api-key'] || info.headers['x_api_key']
+    const headers = info.headers || {}
+    const apiKey = headers['x-api-key'] || headers['x_api_key']
 
-    const validKey = $secrets.get('WORKSPACE_BRIDGE_KEY') || 'WORKSPACE_BRIDGE_KEY_2026'
+    const expectedKey = $secrets.get('WORKSPACE_BRIDGE_KEY') || 'WORKSPACE_BRIDGE_KEY_2026'
 
-    if (apiKey !== validKey) {
+    if (apiKey !== expectedKey) {
       return e.json(401, { message: 'Nao autorizado' })
     }
 
@@ -19,7 +20,7 @@ routerAdd('GET', '/backend/v1/hooks/contratos-pendentes', (e) => {
 
     const result = records.map(function (r) {
       return {
-        id: r.id,
+        id: r.getString('id') || r.id,
         zapsign_token: r.getString('zapsign_token'),
         nome_signatario: r.getString('nome_signatario'),
         cpf: r.getString('cpf'),
@@ -34,7 +35,8 @@ routerAdd('GET', '/backend/v1/hooks/contratos-pendentes', (e) => {
 
     return e.json(200, result)
   } catch (error) {
-    console.log('contratos-pendentes error: ' + error.message)
-    return e.json(500, { message: 'Erro interno', detail: error.message })
+    const errorDetail = error.message || 'error_message_or_unknown'
+    console.log('contratos-pendentes error:', error, error.message)
+    return e.json(500, { message: 'Erro interno', detail: errorDetail })
   }
 })
