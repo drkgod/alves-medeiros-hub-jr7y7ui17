@@ -31,6 +31,14 @@ import {
 import { useContratos } from '@/hooks/use-contratos'
 import { format } from 'date-fns'
 import { SectionErrorBoundary } from '@/components/SectionErrorBoundary'
+import pb from '@/lib/pocketbase/client'
+
+function getPdfUrl(item: any) {
+  if (item.arquivo_pdf && typeof item.arquivo_pdf === 'string' && item.arquivo_pdf.trim() !== '') {
+    return pb.files.getURL(item, item.arquivo_pdf)
+  }
+  return item.url_pdf || ''
+}
 
 function formatCPF(cpf: string) {
   const cleaned = cpf.replace(/\D/g, '')
@@ -233,10 +241,10 @@ export default function Contratos() {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end gap-2">
-                                {item.url_pdf && (
+                                {getPdfUrl(item) && (
                                   <Button variant="outline" size="sm" asChild>
                                     <a
-                                      href={item.url_pdf}
+                                      href={getPdfUrl(item)}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                     >
@@ -288,9 +296,9 @@ export default function Contratos() {
                             </span>
                           </div>
                           <div className="flex flex-col gap-2 pt-2">
-                            {item.url_pdf && (
+                            {getPdfUrl(item) && (
                               <Button variant="outline" className="w-full" asChild>
-                                <a href={item.url_pdf} target="_blank" rel="noopener noreferrer">
+                                <a href={getPdfUrl(item)} target="_blank" rel="noopener noreferrer">
                                   Ver PDF
                                   <ExternalLink className="ml-2 h-4 w-4" />
                                 </a>
