@@ -12,7 +12,9 @@ routerAdd('POST', '/backend/v1/hooks/salvar-peticao', function (e) {
 
     const body = info.body || {}
     if (!body.contrato_id || !body.tipo_peticao || !body.conteudo_gerado) {
-      return e.json(400, { message: 'Dados invalidos' })
+      return e.json(400, {
+        message: 'Campos obrigatorios ausentes: contrato_id, tipo_peticao, conteudo_gerado',
+      })
     }
 
     let contrato
@@ -49,7 +51,7 @@ routerAdd('POST', '/backend/v1/hooks/salvar-peticao', function (e) {
 
     return e.json(200, { id: e.get('new_id') })
   } catch (err) {
-    console.log('salvar-peticao error:', err, err.message)
+    console.log('salvar-peticao error:', err)
     return e.json(500, { message: 'Erro ao salvar peticao', detail: err.message || 'unknown' })
   }
 })
