@@ -13,7 +13,7 @@ migrate(
       fields: [
         { name: 'zapsign_token', type: 'text', required: true },
         { name: 'nome_signatario', type: 'text', required: true },
-        { name: 'cpf', type: 'text', required: true },
+        { name: 'cpf', type: 'text' },
         { name: 'email', type: 'text' },
         { name: 'telefone', type: 'text' },
         { name: 'url_pdf', type: 'text' },

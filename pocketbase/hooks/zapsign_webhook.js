@@ -11,13 +11,26 @@ routerAdd('POST', '/backend/v1/hooks/zapsign', (e) => {
       return e.json(200, { message: 'Evento ignorado' })
     }
 
+    try {
+      const existing = $app.findFirstRecordByData(
+        'contratos_assinados',
+        'zapsign_token',
+        body.token,
+      )
+      if (existing) {
+        return e.json(200, { message: 'Contrato ja processado', id: existing.id })
+      }
+    } catch (_) {
+      // Not found, process normally
+    }
+
     let signer = body.signer_who_signed
     if (!signer && body.signers && Array.isArray(body.signers)) {
       signer = body.signers.find((s) => s.status === 'signed')
     }
 
     if (!signer) {
-      return e.json(200, { message: 'Nenhum signatario encontrado no payload' })
+      return e.json(200, { message: 'Nenhum signatario encontrado' })
     }
 
     let cpfCnpj = ''
@@ -42,22 +55,22 @@ routerAdd('POST', '/backend/v1/hooks/zapsign', (e) => {
     const record = new Record(col)
 
     record.set('zapsign_token', body.token || '')
-    record.set('nome_signatario', signer.name || '')
-    record.set('cpf', cpfCnpj || '')
+    record.set('nome_signatario', signer.name || 'Signatario nao informado')
+    record.set('cpf', cpfCnpj)
     record.set('email', signer.email || '')
-    record.set('telefone', signer.phone_number || '')
+    record.set('telefone', signer.phone_number || signer.phone || '')
     record.set('url_pdf', body.signed_file || '')
     record.set('status', 'pendente_processamento')
-    record.set('dados_webhook', body)
+    record.set('dados_webhook', JSON.stringify(body))
     record.set('data_assinatura', dataAssinatura)
 
     $app.save(record)
 
-    console.log('ZapSign webhook processed:', record.id)
+    console.log('ZapSign webhook OK:', record.id)
 
     return e.json(200, { id: record.id })
   } catch (err) {
-    console.log('zapsign-webhook error:', err)
-    return e.json(500, { message: 'Erro ao processar webhook' })
+    console.log('zapsign-webhook error:', err, err.message)
+    return e.json(500, { message: 'Erro ao processar webhook', detail: String(err) })
   }
 })
