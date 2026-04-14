@@ -7,27 +7,40 @@ routerAdd('POST', '/backend/v1/hooks/zapsign', function (e) {
       return e.json(200, { message: 'Evento ignorado' })
     }
 
-    const token = body.token
-    if (!token) {
+    const docToken = body.token
+    if (!docToken) {
       return e.json(400, { message: 'Payload invalido' })
     }
 
-    try {
-      const existing = $app.findFirstRecordByData('contratos_assinados', 'zapsign_token', token)
-      if (existing) {
-        return e.json(200, { message: 'Contrato ja processado' })
-      }
-    } catch (_) {
-      // Nao encontrado, processa normalmente
+    const existingRecords = $app.findRecordsByFilter(
+      'contratos_assinados',
+      "zapsign_token = '" + docToken + "'",
+      '',
+      1,
+      0,
+    )
+
+    if (existingRecords && existingRecords.length > 0) {
+      return e.json(200, { message: 'Contrato ja processado' })
     }
 
     let pdfUrl = ''
-    if (body.signed_file && body.signed_file.signed_file_url) {
-      pdfUrl = body.signed_file.signed_file_url
-    } else if (body.signed_file_url) {
+    if (body.signed_file) {
+      if (typeof body.signed_file === 'string') {
+        pdfUrl = body.signed_file
+      } else if (body.signed_file.signed_file_url) {
+        pdfUrl = body.signed_file.signed_file_url
+      }
+    }
+    if (!pdfUrl && body.signed_file_url) {
       pdfUrl = body.signed_file_url
-    } else if (body.original_file && body.original_file.original_file_url) {
-      pdfUrl = body.original_file.original_file_url
+    }
+    if (!pdfUrl && body.original_file) {
+      if (typeof body.original_file === 'string') {
+        pdfUrl = body.original_file
+      } else if (body.original_file.original_file_url) {
+        pdfUrl = body.original_file.original_file_url
+      }
     }
 
     let nome = ''
@@ -60,7 +73,7 @@ routerAdd('POST', '/backend/v1/hooks/zapsign', function (e) {
     const col = $app.findCollectionByNameOrId('contratos_assinados')
     const record = new Record(col)
 
-    record.set('zapsign_token', token)
+    record.set('zapsign_token', docToken)
     record.set('nome_signatario', nome)
     record.set('cpf', cpf)
     record.set('email', email)
@@ -73,17 +86,21 @@ routerAdd('POST', '/backend/v1/hooks/zapsign', function (e) {
     let pdfStored = false
 
     if (pdfUrl) {
-      const res = $http.send({
-        url: pdfUrl,
-        method: 'GET',
-        timeout: 30,
-      })
+      try {
+        const res = $http.send({
+          url: pdfUrl,
+          method: 'GET',
+          timeout: 30,
+        })
 
-      if (res.statusCode === 200 && res.body) {
-        const fileName = 'contrato_' + token + '.pdf'
-        const file = $filesystem.fileFromBytes(res.body, fileName)
-        record.set('arquivo_pdf', file)
-        pdfStored = true
+        if (res.statusCode === 200 && res.body) {
+          const fileName = 'contrato_' + docToken + '.pdf'
+          const file = $filesystem.fileFromBytes(res.body, fileName)
+          record.set('arquivo_pdf', file)
+          pdfStored = true
+        }
+      } catch (httpErr) {
+        console.log('zapsign-webhook error downloading pdf:', String(httpErr))
       }
     }
 
