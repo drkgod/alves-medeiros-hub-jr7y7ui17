@@ -331,4 +331,17 @@ export default function Contratos() {
                     <Button
                       variant="outline"
                       onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled
+                      disabled={page === totalPages}
+                    >
+                      Próximo
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </SectionErrorBoundary>
+    </div>
+  )
+}
