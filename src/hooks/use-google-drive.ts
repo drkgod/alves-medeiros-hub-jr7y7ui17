@@ -51,7 +51,7 @@ export function useGoogleDrive() {
       try {
         const res = await pb.send('/backend/v1/google-drive-list', {
           method: 'POST',
-          body: JSON.stringify({ user_id: user.id, parent_id: folderId }),
+          body: { parent_id: folderId },
         })
         setFiles(res.files || [])
       } catch (err: any) {
@@ -76,12 +76,11 @@ export function useGoogleDrive() {
     if (!user) throw new Error('Usuário não autenticado')
     await pb.send('/backend/v1/google-drive-manage', {
       method: 'POST',
-      body: JSON.stringify({
+      body: {
         action: 'create_folder',
-        user_id: user.id,
         name,
         parent_id: parentId,
-      }),
+      },
     })
   }
 
@@ -89,12 +88,11 @@ export function useGoogleDrive() {
     if (!user) throw new Error('Usuário não autenticado')
     await pb.send('/backend/v1/google-drive-manage', {
       method: 'POST',
-      body: JSON.stringify({
+      body: {
         action: 'rename',
-        user_id: user.id,
         file_id: fileId,
         name: newName,
-      }),
+      },
     })
   }
 
@@ -102,13 +100,12 @@ export function useGoogleDrive() {
     if (!user) throw new Error('Usuário não autenticado')
     await pb.send('/backend/v1/google-drive-manage', {
       method: 'POST',
-      body: JSON.stringify({
+      body: {
         action: 'move',
-        user_id: user.id,
         file_id: fileId,
         new_parent_id: newParentId,
         old_parent_id: oldParentId,
-      }),
+      },
     })
   }
 
@@ -116,12 +113,11 @@ export function useGoogleDrive() {
     if (!user) throw new Error('Usuário não autenticado')
     await pb.send('/backend/v1/google-drive-manage', {
       method: 'POST',
-      body: JSON.stringify({
+      body: {
         action: 'create_structure',
-        user_id: user.id,
         client_name: clientName,
         parent_id: parentId,
-      }),
+      },
     })
   }
 
