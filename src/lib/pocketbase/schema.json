@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-04-14T21:16:38.587Z",
+  "generatedAt": "2026-04-14T21:34:46.285Z",
   "collections": [
     {
       "name": "users",
@@ -121,12 +121,6 @@
         {
           "name": "nome_signatario",
           "type": "text",
-          "required": false,
-          "system": false
-        },
-        {
-          "name": "arquivo_pdf",
-          "type": "file",
           "required": false,
           "system": false
         }
