@@ -37,3 +37,19 @@ routerAdd('POST', '/backend/v1/hooks/salvar-peticao', function (e) {
 
       if (body.dados_extraidos) {
         peticao.set('dados_extraidos', body.dados_extraidos)
+      }
+
+      txApp.save(peticao)
+
+      contrato.set('status', 'processado')
+      txApp.save(contrato)
+
+      e.set('new_id', peticao.id)
+    })
+
+    return e.json(200, { id: e.get('new_id') })
+  } catch (err) {
+    console.log('Erro ao salvar peticao:', err.message || err)
+    return e.json(500, { error: 'Erro ao salvar petição', detail: err.message || 'Erro interno' })
+  }
+})
