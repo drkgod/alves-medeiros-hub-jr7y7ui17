@@ -73,6 +73,9 @@ routerAdd('POST', '/backend/v1/hooks/zapsign', function (e) {
     if (!pdfUrl && body.signed_file_url) {
       pdfUrl = body.signed_file_url
     }
+    if (!pdfUrl && body.original_file) {
+      pdfUrl = body.original_file
+    }
 
     var col = $app.findCollectionByNameOrId('contratos_assinados')
     var record = new Record(col)
@@ -86,6 +89,22 @@ routerAdd('POST', '/backend/v1/hooks/zapsign', function (e) {
     record.set('status', 'pendente_processamento')
     record.set('dados_webhook', JSON.stringify(body))
     record.set('data_assinatura', dataAssinatura)
+
+    if (pdfUrl) {
+      try {
+        var pdfRes = $http.send({
+          url: pdfUrl,
+          method: 'GET',
+          timeout: 30,
+        })
+        if (pdfRes.statusCode === 200 && pdfRes.body) {
+          var pdfFile = $filesystem.fileFromBytes(pdfRes.body, 'contrato_' + body.token + '.pdf')
+          record.set('arquivo_pdf', pdfFile)
+        }
+      } catch (pdfErr) {
+        console.log('zapsign-webhook warning: falha ao baixar PDF', String(pdfErr))
+      }
+    }
 
     $app.save(record)
 
