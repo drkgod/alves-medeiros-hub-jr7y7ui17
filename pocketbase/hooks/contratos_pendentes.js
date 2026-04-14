@@ -25,16 +25,4 @@ routerAdd('GET', '/backend/v1/hooks/contratos-pendentes', (e) => {
         cpf: r.getString('cpf'),
         email: r.getString('email'),
         telefone: r.getString('telefone'),
-        url_pdf: r.getString('url_pdf'),
-        status: r.getString('status'),
-        data_assinatura: r.getString('data_assinatura'),
-        created: r.getString('created'),
-      }
-    })
-
-    return e.json(200, result)
-  } catch (error) {
-    console.log('contratos-pendentes error: ' + error.message)
-    return e.json(500, { message: 'Erro interno', detail: error.message })
-  }
-})
+        url_pdf: r.getString('
