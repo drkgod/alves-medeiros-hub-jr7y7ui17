@@ -1,32 +1,44 @@
-routerAdd('POST', '/backend/v1/hooks/salvar-peticao', (e) => {
-  const apiKey = e.request.header.get('x-api-key') || e.requestInfo().headers['x_api_key']
-  if (apiKey !== 'WORKSPACE_BRIDGE_KEY_2026') {
-    throw new UnauthorizedError('Nao autorizado')
-  }
-
-  const body = e.requestInfo().body || {}
-  if (!body.contrato_id || !body.tipo_peticao || !body.conteudo_gerado) {
-    throw new BadRequestError('Dados inválidos')
-  }
-
-  let contrato
+routerAdd('POST', '/backend/v1/hooks/salvar-peticao', function (e) {
   try {
-    contrato = $app.findRecordById('contratos_assinados', body.contrato_id)
-  } catch (err) {
-    throw new NotFoundError('Contrato não encontrado')
-  }
+    const info = $apis.requestInfo(e)
 
-  try {
-    $app.runInTransaction((txApp) => {
+    const expectedKey = $secrets.get('WORKSPACE_BRIDGE_KEY') || 'WORKSPACE_BRIDGE_KEY_2026'
+    const headers = info.headers || {}
+    const providedKey = headers['x-api-key'] || headers['x_api_key']
+
+    if (providedKey !== expectedKey) {
+      return e.json(401, { error: 'Nao autorizado' })
+    }
+
+    const body = info.body || {}
+    if (!body.contrato_id || !body.tipo_peticao || !body.conteudo_gerado) {
+      return e.json(400, { error: 'Dados inválidos' })
+    }
+
+    let contrato
+    try {
+      contrato = $app.findRecordById('contratos_assinados', body.contrato_id)
+    } catch (err) {
+      return e.json(404, { error: 'Contrato não encontrado' })
+    }
+
+    $app.runInTransaction(function (txApp) {
       const peticoesCol = txApp.findCollectionByNameOrId('peticoes')
       const peticao = new Record(peticoesCol)
+
       peticao.set('contrato', body.contrato_id)
       peticao.set('tipo_peticao', body.tipo_peticao)
       peticao.set('conteudo_gerado', body.conteudo_gerado)
       peticao.set('status', 'rascunho')
+
       if (body.modelo_id) {
         peticao.set('modelo', body.modelo_id)
       }
+
+      if (body.dados_extraidos) {
+        peticao.set('dados_extraidos', body.dados_extraidos)
+      }
+
       txApp.save(peticao)
 
       contrato.set('status', 'processado')
@@ -37,6 +49,7 @@ routerAdd('POST', '/backend/v1/hooks/salvar-peticao', (e) => {
 
     return e.json(200, { id: e.get('new_id') })
   } catch (err) {
-    throw new InternalServerError('Erro ao salvar petição')
+    console.log('Erro ao salvar peticao:', err.message || err)
+    return e.json(500, { error: 'Erro ao salvar petição', detail: err.message || 'Erro interno' })
   }
 })
